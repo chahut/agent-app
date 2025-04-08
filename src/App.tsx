@@ -2,13 +2,37 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
-
+import {
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { chahutApi } from "@chahut/api";
+import useAgent from "./modules/agent/hooks/useAgent";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Textarea } from "./components/ui/textarea";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarTrigger,
+} from "./components/ui/sidebar";
 
 function App() {
 	const [greetMsg, setGreetMsg] = useState("");
 	const [name, setName] = useState("");
 	const [answer, setAnswer] = useState("");
+
+	const { ask } = useAgent({ id: "mistral-public" });
 
 	async function greet() {
 		console.info("HELLO");
@@ -18,61 +42,65 @@ function App() {
     `,
 		);
 
-		const api = chahutApi("https://api-production-8d81.up.railway.app/");
-		const answer = await api
-			.agent({ id: "mistral-public" })
-			.ask.get({ query: { prompt: name } });
-
-		if (!answer.data) return;
-
-		for await (const chunk of answer.data) {
-			setAnswer((a) => `${a}${chunk}`);
-		}
-
-		// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-		try {
-			setGreetMsg(await invoke("greet", { name }));
-		} catch (error) {
-			console.error("Failed to invoke greet:", error);
-			setGreetMsg("Error invoking greet!");
-		}
+		ask(name, (chunk) => setAnswer((a) => `${a}${chunk}`));
 	}
 
 	return (
-		<main className="container">
-			<h1>Welcome to Tauri + React</h1>
+		<SidebarProvider>
+			<Sidebar>
+				<SidebarHeader />
+				<SidebarContent>
+					<SidebarGroup>
+						<SidebarGroupLabel>History</SidebarGroupLabel>
+						<SidebarGroupContent>
+							<SidebarMenu>
+								{["convo", "chat 2"].map((item) => (
+									<SidebarMenuItem key={item}>
+										<SidebarMenuButton asChild>
+											<span>{item}</span>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								))}
+							</SidebarMenu>
+						</SidebarGroupContent>
+					</SidebarGroup>
+					<SidebarGroup />
+				</SidebarContent>
+				<SidebarFooter />
+			</Sidebar>
+			<main className="w-full h-[100vh] flex flex-col">
+				<SidebarTrigger />
+				<ResizablePanelGroup direction="vertical">
+					<ResizablePanel className="p-3 relative">
+						<div className="w-full grow flex h-full">
+							<p className="grow">{answer}</p>
+							<div className="absolute bottom-0 right-0 p-3 self-center w-full flex justify-end">
+								<Button onClick={greet}>Send</Button>
+							</div>
+						</div>
+					</ResizablePanel>
+					<ResizableHandle withHandle>Hello</ResizableHandle>
+					<ResizablePanel className="p-3">
+						<form
+							className="flex flex-row gap-3 h-full"
+							onSubmit={(e) => {
+								e.preventDefault();
+								console.log(e);
 
-			<div className="row">
-				<a href="https://vitejs.dev" target="_blank">
-					<img src="/vite.svg" className="logo vite" alt="Vite logo" />
-				</a>
-				<a href="https://tauri.app" target="_blank">
-					<img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-				</a>
-				<a href="https://reactjs.org" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<p>{answer}</p>
-
-			<form
-				className="row"
-				onSubmit={(e) => {
-					e.preventDefault();
-					console.log(e);
-
-					greet();
-				}}
-			>
-				<input
-					id="greet-input"
-					onChange={(e) => setName(e.currentTarget.value)}
-					placeholder="Enter a name..."
-				/>
-				<button type="submit">Greet</button>
-			</form>
-			<p>{greetMsg}</p>
-		</main>
+								greet();
+							}}
+						>
+							<Textarea
+								id="greet-input"
+								className="resize-none h-full"
+								onChange={(e) => setName(e.currentTarget.value)}
+								placeholder="Enter a name..."
+							/>
+						</form>
+					</ResizablePanel>
+				</ResizablePanelGroup>
+			</main>
+		</SidebarProvider>
 	);
 }
 
