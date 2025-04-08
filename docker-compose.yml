@@ -1,9 +1,9 @@
 version: "3.8"
 
 services:
-  tauri-app:
-    build: .
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
+      - "4173:4173"
