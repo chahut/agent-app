@@ -1,6 +1,10 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { Outlet } from "react-router";
 
+/**
+ * Layout of the mainframe + sidebar, included for every app route
+ * @category Route
+ */
 export default function Index() {
 	return (
 		<SidebarProvider>
