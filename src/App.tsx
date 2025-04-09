@@ -1,4 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import {
+	BrowserRouter,
+	Routes,
+	Route,
+	Link,
+} from "react-router-dom";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
