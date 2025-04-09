@@ -10,6 +10,13 @@ import {
 import { chahutApi } from "@chahut/api";
 import useAgent from "./modules/agent/hooks/useAgent";
 import { Button } from "./components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "./components/ui/select";
 import { Input } from "./components/ui/input";
 import { Textarea } from "./components/ui/textarea";
 import {
@@ -74,13 +81,23 @@ function App() {
 					<ResizablePanel className="p-3 relative">
 						<div className="w-full grow flex h-full">
 							<p className="grow">{answer}</p>
-							<div className="absolute bottom-0 right-0 p-3 self-center w-full flex justify-end">
-								<Button onClick={greet}>Send</Button>
-							</div>
+						</div>
+						<div className="absolute bottom-0 right-0 p-3 self-center w-full flex justify-start">
+							<Select>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="Speak to" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="light">Mistral</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
 					</ResizablePanel>
 					<ResizableHandle withHandle>Hello</ResizableHandle>
-					<ResizablePanel className="p-3">
+					<ResizablePanel className="relative bg-stone-100">
+						<div className="absolute bottom-0 right-0 p-6 self-center w-full flex justify-end">
+							<Button onClick={greet}>Send</Button>
+						</div>
 						<form
 							className="flex flex-row gap-3 h-full"
 							onSubmit={(e) => {
@@ -92,7 +109,7 @@ function App() {
 						>
 							<Textarea
 								id="greet-input"
-								className="resize-none h-full"
+								className="resize-none h-full bg-transparent rounded-none"
 								onChange={(e) => setName(e.currentTarget.value)}
 								placeholder="Enter a name..."
 							/>

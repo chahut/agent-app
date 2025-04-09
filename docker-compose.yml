@@ -1,6 +1,12 @@
 version: "3.8"
 
 services:
+  android:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    ports:
+      - "4173:4173"
   web:
     build:
       context: .
