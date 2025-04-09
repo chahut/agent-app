@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import {
+	MarkdownStreamParser,
+	MarkdownStreamParserOptions,
+	createMarkdownStreamParser,
+} from "@nlux/markdown";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -33,23 +38,53 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from "./components/ui/sidebar";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 
 function App() {
 	const [greetMsg, setGreetMsg] = useState("");
 	const [name, setName] = useState("");
-	const [answer, setAnswer] = useState("");
+	const answerRef = useRef<HTMLDivElement>(null);
+	const [mdStreamParser, setMdStreamParser] =
+		useState<MarkdownStreamParser | null>(null);
+
+	useEffect(() => {
+		if (!answerRef.current) return;
+
+		const options: MarkdownStreamParserOptions = {
+			// markdownLinkTarget?: 'blank' | 'self';                       // default: 'blank'
+			// syntaxHighlighter: (( Highlighter from @nlux/highlighter )), // default: undefined — for code blocks syntax highlighting
+			// showCodeBlockCopyButton?: boolean,                           // default: true — for code blocks
+			// skipStreamingAnimation?: boolean,                            // default: false
+			// streamingAnimationSpeed?: number,                            // default: 10 ( milliseconds )
+			// waitTimeBeforeStreamCompletion?: number | 'never',           // default: 2000 ( milliseconds )
+			// onComplete: () => console.log("Parsing complete"),           // triggered after the end of the stream
+		};
+
+		const domElement = answerRef.current;
+
+		setMdStreamParser(mdStreamParser);
+	}, [answerRef]);
 
 	const { ask } = useAgent({ id: "mistral-public" });
 
 	async function greet() {
 		console.info("HELLO");
 
-		setAnswer(
-			(a) => `${a}
-    `,
+		if (!answerRef.current) return;
+
+		const domElement = answerRef.current;
+
+		const mdStreamParser: MarkdownStreamParser = createMarkdownStreamParser(
+			domElement!,
+			{},
 		);
 
-		ask(name, (chunk) => setAnswer((a) => `${a}${chunk}`));
+		mdStreamParser.next("## Hello World");
+
+		await ask(name, (chunk) => mdStreamParser.next(chunk));
+
+		console.log("a");
+		mdStreamParser.complete();
 	}
 
 	return (
@@ -60,7 +95,7 @@ function App() {
 					<SidebarGroup>
 						<SidebarGroupLabel>History</SidebarGroupLabel>
 						<SidebarGroupContent>
-							<SidebarMenu>
+							<SidebarMenu >
 								{["convo", "chat 2"].map((item) => (
 									<SidebarMenuItem key={item}>
 										<SidebarMenuButton asChild>
@@ -75,15 +110,23 @@ function App() {
 				</SidebarContent>
 				<SidebarFooter />
 			</Sidebar>
-			<main className="w-full h-[100vh] flex flex-col">
-				<SidebarTrigger />
+			<main className="w-full h-[100vh] flex flex-col relative">
+				<SidebarTrigger className="absolute" />
 				<ResizablePanelGroup direction="vertical">
-					<ResizablePanel className="p-3 relative">
-						<div className="w-full grow flex h-full">
-							<p className="grow">{answer}</p>
+					<ResizablePanel className="py-0 pl-3 relative">
+						<div className="w-full grow flex h-full max-h-full">
+							<ScrollArea
+								className="mx-auto max-w-[600px] grow overflow-y-scroll"
+								ref={answerRef}
+							></ScrollArea>
 						</div>
-						<div className="absolute bottom-0 right-0 p-3 self-center w-full flex justify-start">
-							<Select>
+					</ResizablePanel>
+					<ResizablePanel className="relative bg-stone-100">
+						{/* <div className="absolute bottom-0 right-0 p-6 self-center w-full flex justify-end">
+							<Button onClick={greet}>Send</Button>
+						</div> */}
+						<div className="p-3 w-full flex justify-between mx-auto max-w-[600px]">
+							<Select size="sm">
 								<SelectTrigger className="w-[180px]">
 									<SelectValue placeholder="Speak to" />
 								</SelectTrigger>
@@ -91,11 +134,10 @@ function App() {
 									<SelectItem value="light">Mistral</SelectItem>
 								</SelectContent>
 							</Select>
-						</div>
-					</ResizablePanel>
-					<ResizableHandle withHandle>Hello</ResizableHandle>
-					<ResizablePanel className="relative bg-stone-100">
-						<div className="absolute bottom-0 right-0 p-6 self-center w-full flex justify-end">
+							<div className="flex flex-col justify-center gap-2 items-center h-full">
+								<ResizableHandle withHandle>Hello</ResizableHandle>
+							</div>
+
 							<Button onClick={greet}>Send</Button>
 						</div>
 						<form

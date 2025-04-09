@@ -19,6 +19,7 @@ export default function useAgent({ id }: UseAgentProps) {
 		if (!data || error) return;
 
 		for await (const chunk of data) forEachChunk(`${chunk}`);
+		return;
 	}
 
 	return {
